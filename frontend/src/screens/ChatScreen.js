@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import client from '../api/client';
 import { getSocket } from '../store/socket';
-import MessageBubble from '../components/MessageBubble';
+import MessageBubble from '../components/MessageInput';
 import MessageInput from '../components/MessageInput';
 import TypingDots from '../components/TypingDots';
 import { useAuthStore } from '../store/auth';

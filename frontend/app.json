@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "ChatMVP",
+    "slug": "chat-mvp",
+    "scheme": "chatmvp",
+    "android": { "package": "com.example.chatmvp" }
+  }
+}
