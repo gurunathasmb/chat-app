@@ -1,67 +1,26 @@
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/users");
-const convRoutes = require("./routes/conversations");
-const { verifySocket } = require("./middleware/auth");
-
-require("dotenv").config();
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import http from 'http';
+import { connectDB } from './src/config/db.js';
+import authRoutes from './src/routes/auth.js';
+import userRoutes from './src/routes/users.js';
+import convoRoutes from './src/routes/conversations.js';
+import { createSocketServer } from './socket.js';
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: { origin: "*" }
-});
-
-app.use(cors());
 app.use(express.json());
+app.use(cors({ origin: (process.env.CORS_ORIGIN || '').split(',').filter(Boolean), credentials: true }));
 
-// Routes
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
-app.use("/conversations", convRoutes);
+app.get('/', (_, res) => res.json({ ok: true }));
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/conversations', convoRoutes);
 
-// MongoDB connect
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.error(err));
+const server = http.createServer(app);
+createSocketServer(server);
 
-// Socket.IO
-let onlineUsers = {};
-
-io.use(verifySocket);
-
-io.on("connection", (socket) => {
-  const userId = socket.user.id;
-  onlineUsers[userId] = socket.id;
-
-  io.emit("user:online", { userId });
-
-  socket.on("message:send", async (msg) => {
-    io.to(onlineUsers[msg.to]).emit("message:new", msg);
-  });
-
-  socket.on("typing:start", ({ to }) => {
-    io.to(onlineUsers[to]).emit("typing:start", { from: userId });
-  });
-
-  socket.on("typing:stop", ({ to }) => {
-    io.to(onlineUsers[to]).emit("typing:stop", { from: userId });
-  });
-
-  socket.on("message:read", ({ to, messageId }) => {
-    io.to(onlineUsers[to]).emit("message:read", { messageId });
-  });
-
-  socket.on("disconnect", () => {
-    delete onlineUsers[userId];
-    io.emit("user:offline", { userId });
-  });
+const PORT = process.env.PORT || 4000;
+connectDB(process.env.MONGO_URI).then(() => {
+  server.listen(PORT, () => console.log(`API running on :${PORT}`));
 });
-
-server.listen(process.env.PORT || 5000, () =>
-  console.log("Server running...")
-);

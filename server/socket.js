@@ -1,9 +1,9 @@
 import { Server } from 'socket.io';
-import Conversation from './models/Conversation.js';
-import Message from './models/Message.js';
-import User from './models/User.js';
-import { getOrCreate } from './routes/conversations.js';
-import { verifyJWT } from './utils/jwt.js';
+import Conversation from './src/models/Conversation.js';
+import Message from './src/models/Message.js';
+import User from './src/models/User.js';
+import { getOrCreate } from './src/routes/conversations.js';
+import { verifyJWT } from './src/utils/jwt.js';
 
 const onlineUsers = new Map(); // userId -> socketId
 
